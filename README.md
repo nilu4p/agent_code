@@ -1,4 +1,4 @@
-# ✻ agent_code (v1) — ton assistant de code 100 % local
+# ✻ agent_code — ton assistant de code 100 % local
 
 Un agent de programmation **façon Claude Code**, qui tourne entièrement sur ta machine avec Ollama et
 `qwen3-coder:30b`. Tu lui parles en français, il explore ton projet, modifie les fichiers (tu valides chaque
