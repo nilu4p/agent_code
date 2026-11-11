@@ -128,7 +128,7 @@ deux missions simultanées sur un même projet.
 ## Modèle et performances
 
 `qwen3-coder:30b` est un modèle « MoE » : 30 milliards de paramètres, mais seuls ~3 milliards travaillent par
-mot généré. Il tourne donc correctement **sans carte graphique**. Mesures sur un Ryzen AI 9 365 avec 32 Go :
+mot généré. Il tourne donc correctement **sans carte graphique**. Mesures sur un Ryzen AI 9 365 avec 32 Go RAM :
 
 | | |
 |---|---|
