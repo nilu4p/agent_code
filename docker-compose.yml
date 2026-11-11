@@ -1,0 +1,64 @@
+# agent_code + Ollama sur un serveur (ou un poste sans Ollama installé).
+#
+#   docker compose up -d ollama                     # démarre Ollama et télécharge les modèles
+#   PROJET=~/projets/mon_app docker compose run --rm agent_code -m revue -t "tout le projet"
+#   PROJET=~/projets/mon_app docker compose run --rm agent_code          # session interactive
+#   docker compose run --rm agent_code --diagnostic
+#
+# Les modèles et la mémoire des agents sont conservés dans des volumes.
+
+services:
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}   # épingle une version (ex : OLLAMA_VERSION=0.x.y) en production
+    restart: unless-stopped
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+    volumes:
+      - ollama:/root/.ollama
+    # Non exposé sur le réseau par défaut. Pour y accéder depuis l'hôte uniquement :
+    # ports: ["127.0.0.1:11434:11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    # GPU NVIDIA (nécessite nvidia-container-toolkit) : décommente
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
+
+  ollama-init:   # télécharge les modèles une fois (idempotent)
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    depends_on:
+      ollama: { condition: service_healthy }
+    environment:
+      OLLAMA_HOST: ollama:11434
+      MODELE: ${AGENT_CODE_MODELE:-qwen3-coder:30b}
+    entrypoint: ["/bin/sh", "-c", "ollama pull \"$$MODELE\""]
+    restart: "no"
+
+  agent_code:
+    build:
+      context: .
+      args:
+        UID: ${AGENT_CODE_UID:-1000}
+    profiles: ["outil"]          # lancé à la demande par « docker compose run »
+    depends_on:
+      ollama: { condition: service_healthy }
+      ollama-init: { condition: service_completed_successfully }
+    environment:
+      AGENT_CODE_MODELE: ${AGENT_CODE_MODELE:-qwen3-coder:30b}
+      AGENT_CODE_CONTEXTE: ${AGENT_CODE_CONTEXTE:-32768}
+      AGENT_CODE_TIMEOUT_MISSION: ${AGENT_CODE_TIMEOUT_MISSION:-3600}
+    volumes:
+      - ${PROJET:-.}:/workspace
+      - agent_code-donnees:/home/agent_code/.local/share   # historique de saisie
+    stdin_open: true
+    tty: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+
+volumes:
+  ollama:
+  agent_code-donnees:

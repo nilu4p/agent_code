@@ -1,0 +1,18 @@
+# Audit qualité + sécurité automatique d'un projet (lecture seule : aucun risque pour le code).
+# Installation (service utilisateur) :
+#   mkdir -p ~/.config/systemd/user && cp deploy/systemd/agent_code-revue.* ~/.config/systemd/user/
+#   systemctl --user edit agent_code-revue.service     # adapte PROJET si besoin
+#   systemctl --user daemon-reload && systemctl --user enable --now agent_code-revue.timer
+#   loginctl enable-linger "$USER"                 # pour tourner même session fermée (serveur)
+# Résultats : <projet>/.agent_code/rapports/  —  journal : journalctl --user -u agent_code-revue
+[Unit]
+Description=agent_code : audit nocturne (lecture seule)
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PROJET=%h/projets/mon_app
+ExecStart=%h/.local/bin/agent_code ${PROJET} -m revue -t "tout le projet, en priorité les changements récents" --sans-web --json --timeout-mission 3600
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true

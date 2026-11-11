@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent_code"
+version = "1.0"
+description = "Assistant de code agentique 100 % local et sécurisé (Ollama + qwen3-coder), façon Claude Code."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "agent_code contributors" }]
+# Le moteur agentique et le client Ollama n'utilisent que la bibliothèque standard.
+dependencies = [
+    "rich==14.3.4",            # affichage (diffs, panneaux, spinner)
+    "prompt_toolkit==3.0.53",  # saisie : historique, autocomplétion /commandes et @fichiers, ⇧Tab
+    "ddgs==9.16.1",            # recherche web
+    "httpx==0.28.1",           # lecture de pages web
+]
+
+[project.optional-dependencies]
+# Outils utilisés par les agents s'ils sont présents (fortement recommandés)
+outils = ["ruff==0.17.3", "pyyaml==6.0.3", "pytest==9.2.0"]
+
+[project.scripts]
+agent_code = "agent_code.cli:point_entree"
+
+[tool.setuptools]
+packages = ["agent_code"]
+
+[tool.setuptools.package-data]
+agent_code = ["defaut.env"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
